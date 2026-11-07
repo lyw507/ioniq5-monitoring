@@ -68,6 +68,7 @@ let seenOnline=false;
 let baseElapsed=0;
 let receivedAt=0;
 let isComplete=false;
+let lastShownElapsed=0;
 
 function waiting(){
  $('connection').textContent='충전 대기 중';
@@ -110,7 +111,6 @@ async function refresh(){
   const updatedAt=Number(d.updatedAt);
   const age=Date.now()-updatedAt;
 
-  // ESP32가 최근 5초 안에 데이터를 보냈는지 확인
   const online=d.esp32Online===true &&
                Number.isFinite(updatedAt) &&
                age>=-10000 && age<=5000;
@@ -125,8 +125,12 @@ async function refresh(){
 
   const pct=Math.max(0,Math.min(100,Number(d.percent)||0));
 
-  baseElapsed=Math.max(0,Number(d.elapsedSeconds)||0);
-  receivedAt=Date.now();
+  const newElapsed=Math.max(0,Number(d.elapsedSeconds)||0);
+
+  baseElapsed=Math.max(lastShownElapsed,newElapsed);
+  receivedAt=performance.now();
+  lastShownElapsed=baseElapsed;
+
   isComplete=d.complete===true;
 
   $('percent').textContent=pct+'%';
@@ -163,9 +167,13 @@ function updateElapsed(){
  if(!seenOnline || !receivedAt) return;
 
  const seconds=baseElapsed+
-  Math.floor((Date.now()-receivedAt)/1000);
+  Math.floor((performance.now()-receivedAt)/1000);
 
- $('elapsed').textContent=fmt(seconds);
+ const smoothSeconds=Math.max(lastShownElapsed,seconds);
+
+ lastShownElapsed=smoothSeconds;
+
+ $('elapsed').textContent=fmt(smoothSeconds);
 }
 
 waiting();
