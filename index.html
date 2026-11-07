@@ -52,25 +52,127 @@ footer{text-align:center;color:#81909a;font-size:11px;padding:18px 4px}
 </section>
 <footer>충전 퍼센트는 현재 테스트용 시간 기반 시뮬레이션입니다.</footer>
 </main>
+
 <script>
 const $=id=>document.getElementById(id);
-function fmt(sec){sec=Math.max(0,Math.floor(sec));const m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
-function disconnected(){ $('connection').textContent='연결 끊김';$('dot').classList.add('off');$('chargeState').textContent='ESP32 연결 끊김';$('stateText').textContent='데이터 수신 불가';$('lastUpdate').textContent='ESP32 또는 Wi-Fi 연결을 확인하세요.'; }
+
+function fmt(sec){
+ sec=Math.max(0,Math.floor(sec));
+ const m=Math.floor(sec/60),s=sec%60;
+ return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
 const FIREBASE_URL='https://ioniq5-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app/ioniq5/status.json';
+
+let seenOnline=false;
+let baseElapsed=0;
+let receivedAt=0;
+let isComplete=false;
+
+function waiting(){
+ $('connection').textContent='충전 대기 중';
+ $('dot').classList.remove('off');
+ $('chargeState').textContent='충전 대기 중';
+ $('stateText').textContent='ESP32 전원을 켜면 충전이 시작됩니다';
+ $('lastUpdate').textContent='ESP32 데이터 수신 대기 중';
+ $('percent').textContent='0%';
+ $('progress').style.width='0%';
+ $('elapsed').textContent='00:00';
+ $('remaining').textContent='--:--';
+ $('dtc').textContent='----';
+ $('dtcText').textContent='실제 차량 ECU에서 읽은 정보가 아닙니다.';
+}
+
+function disconnected(){
+ $('connection').textContent='연결 끊김';
+ $('dot').classList.add('off');
+ $('chargeState').textContent='ESP32 연결 끊김';
+ $('stateText').textContent='데이터 수신 불가';
+ $('lastUpdate').textContent='ESP32 또는 Wi-Fi 연결을 확인하세요.';
+}
+
 async function refresh(){
  try{
-  const r=await fetch(FIREBASE_URL+'?t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw Error('HTTP '+r.status);
-  const d=await r.json(); if(!d || typeof d.percent==='undefined') throw Error('No data');
+  const r=await fetch(FIREBASE_URL+'?t='+Date.now(),{
+   cache:'no-store'
+  });
+
+  if(!r.ok) throw Error('HTTP '+r.status);
+
+  const d=await r.json();
+
+  if(!d || typeof d.updatedAt==='undefined'){
+   if(seenOnline) disconnected();
+   else waiting();
+   return;
+  }
+
+  const updatedAt=Number(d.updatedAt);
+  const age=Date.now()-updatedAt;
+
+  // ESP32가 최근 5초 안에 데이터를 보냈는지 확인
+  const online=d.esp32Online===true &&
+               Number.isFinite(updatedAt) &&
+               age>=-10000 && age<=5000;
+
+  if(!online){
+   if(seenOnline) disconnected();
+   else waiting();
+   return;
+  }
+
+  seenOnline=true;
+
   const pct=Math.max(0,Math.min(100,Number(d.percent)||0));
-  $('percent').textContent=pct+'%';$('progress').style.width=pct+'%';
-  $('elapsed').textContent=fmt(d.elapsedSeconds||0);$('remaining').textContent=d.complete?'완료':fmt(d.remainingSeconds||0);
-  $('chargeState').textContent=d.complete?'충전 완료':'충전 중';$('stateText').textContent=d.complete?'충전이 완료되었습니다':'충전 진행 중';
-  $('dtc').textContent=d.dtc||'----';$('dtcText').textContent=(d.dtcText||'진단 코드 설명')+' · 테스트용 임의 고장 코드';
-  const online=d.esp32Online!==false;
-  $('connection').textContent=online?'Firebase 데이터 수신':'ESP32 연결 확인 필요';$('dot').classList.toggle('off',!online);
-  $('lastUpdate').textContent='마지막 수신: '+new Date().toLocaleTimeString('ko-KR');
- }catch(e){disconnected();}
+
+  baseElapsed=Math.max(0,Number(d.elapsedSeconds)||0);
+  receivedAt=Date.now();
+  isComplete=d.complete===true;
+
+  $('percent').textContent=pct+'%';
+  $('progress').style.width=pct+'%';
+
+  $('remaining').textContent=isComplete
+   ?'완료'
+   :fmt(d.remainingSeconds||0);
+
+  $('chargeState').textContent=isComplete?'충전 완료':'충전 중';
+  $('stateText').textContent=isComplete
+   ?'충전이 완료되었습니다'
+   :'충전 진행 중';
+
+  $('dtc').textContent=d.dtc||'----';
+  $('dtcText').textContent=
+   (d.dtcText||'진단 코드 설명')+' · 테스트용 임의 고장 코드';
+
+  $('connection').textContent='Firebase 데이터 수신';
+  $('dot').classList.remove('off');
+
+  $('lastUpdate').textContent=
+   '마지막 수신: '+new Date(updatedAt).toLocaleTimeString('ko-KR');
+
+  updateElapsed();
+
+ }catch(e){
+  if(seenOnline) disconnected();
+  else waiting();
+ }
 }
-refresh();setInterval(refresh,2000);
+
+function updateElapsed(){
+ if(!seenOnline || !receivedAt) return;
+
+ const seconds=baseElapsed+
+  Math.floor((Date.now()-receivedAt)/1000);
+
+ $('elapsed').textContent=fmt(seconds);
+}
+
+waiting();
+refresh();
+
+setInterval(refresh,2000);
+setInterval(updateElapsed,1000);
 </script>
+
 </body></html>
