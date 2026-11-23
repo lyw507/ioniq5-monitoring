@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101820">
+<meta name="theme-color" content="#f3f5f8">
 <title>CYBERTRUCK 충전 모니터링</title>
 <style>
 :root{color-scheme:dark;--bg:#101820;--panel:#1b2832;--muted:#aab7c1;--green:#46d39a;--line:#33434f}
@@ -25,6 +25,74 @@ header{display:flex;justify-content:space-between;align-items:center;margin:8px 
 .connection{display:flex;align-items:center;gap:8px;font-size:14px}.dot{width:9px;height:9px;border-radius:50%;background:#46d39a;box-shadow:0 0 10px #46d39a}
 .dot.off{background:#ff6868;box-shadow:0 0 10px #ff6868}
 footer{text-align:center;color:#81909a;font-size:11px;padding:18px 4px}
+
+/* G-scan inspired diagnostic module */
+.diag-shell{background:linear-gradient(145deg,#111b25,#172633);border:1px solid #3b5363;border-radius:18px;padding:16px;margin-top:14px;box-shadow:0 14px 34px #0003}
+.diag-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.diag-brand{font-size:14px;font-weight:800;letter-spacing:.08em}.diag-sub{font-size:10px;color:#91a5b5;margin-top:3px;letter-spacing:.08em}
+.diag-state{font-size:10px;color:#8cf0c1;background:#153b31;border:1px solid #286b54;border-radius:20px;padding:6px 9px;white-space:nowrap}
+.diag-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0}
+.diag-tab{border:1px solid #405566;background:#1c2b37;color:#c3d0d9;border-radius:10px;padding:10px;font-weight:700;font-size:12px;cursor:pointer}
+.diag-tab.active{background:#174b43;border-color:#32bd91;color:#a4f5d5}
+.diag-pane{display:none}.diag-pane.active{display:block}
+.dtc-list{display:grid;gap:7px;margin-top:10px}
+.dtc-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;background:#0e1821;border:1px solid #2c3e4c;border-radius:10px;padding:10px}
+.dtc-row strong{font-size:12px;letter-spacing:.03em}.dtc-row small{display:block;color:#9fb0bd;font-size:11px;margin-top:4px;line-height:1.35}
+.dtc-tag{font-size:9px;color:#9eb0be;border:1px solid #435766;border-radius:20px;padding:4px 7px;white-space:nowrap}
+.dtc-tag.current{color:#ffb1ad;border-color:#a64d4a;background:#492321}
+.sensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+.sensor-btn{background:#0e1821;color:#c7d3dc;border:1px solid #354b5a;border-radius:9px;padding:9px 7px;font-size:11px;text-align:left;cursor:pointer;min-height:42px}
+.sensor-btn.active{border-color:#37d4a0;background:#12352f;color:#a8f5d7}
+.scope{background:#07121a;border:1px solid #2d4656;border-radius:12px;padding:10px;margin-top:10px}
+.scope-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:#b5c5d0;margin-bottom:8px}
+.scope-live{color:#55e5ae;font-size:10px}.scope canvas{display:block;width:100%;height:180px}
+.scope-values{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}
+.scope-value{background:#14232e;border-radius:8px;padding:8px}.scope-value span{display:block;color:#91a5b5;font-size:9px}.scope-value b{display:block;color:#e8f2f7;font-size:13px;margin-top:4px}
+.scope-controls{display:flex;gap:7px;margin-top:10px}.scope-controls button{flex:1;border:1px solid #43596a;background:#1b2c39;color:#e6edf2;border-radius:8px;padding:9px;font-size:11px;font-weight:700;cursor:pointer}
+.diag-disclaimer{font-size:10px;line-height:1.5;color:#8fa1af;margin-top:10px}
+@media(max-width:380px){.diag-shell{padding:12px}.scope canvas{height:155px}.sensor-btn{font-size:10px}}
+
+
+/* Unified professional white workshop theme */
+:root{color-scheme:light;--bg:#f3f5f8;--panel:#fff;--muted:#64748b;--green:#15966a;--line:#d9e0e8}
+body{background:#f3f5f8!important;color:#172334!important}
+main{max-width:1180px!important;padding:22px 20px 38px!important}
+header{color:#172334}.sub,.label,.note{color:#64748b!important}
+.panel{background:#fff!important;border:1px solid #dce3eb!important;box-shadow:0 4px 16px #23344d0c!important;color:#172334!important;border-radius:14px!important}
+.metric{background:#f4f7fa!important;color:#172334}.metric strong{color:#172334}.bar{background:#e5eaf0}.fill{background:linear-gradient(90deg,#138cbd,#24b88a)}
+.pill{background:#eaf7f1!important;color:#137a55!important;border-color:#b8e4d1!important}
+.gscan-device{background:#fff!important;border:1px solid #cfd8e3!important;border-radius:12px!important;box-shadow:0 8px 28px #25364b12!important;color:#172334!important;overflow:hidden}
+.gs-status{background:#eef2f7!important;color:#506176!important;border-bottom:1px solid #d8e0e9!important}
+.gs-header{background:#243b63!important;color:#fff!important}.gs-header small{color:#d5dfef!important}
+.gs-body{background:#fff!important}.gs-sidebar{background:#f0f3f7!important;border-right:1px solid #dce3eb!important}
+.gs-nav{color:#334155!important;border-bottom:1px solid #e0e6ed!important}.gs-nav.active{background:#dcecf8!important;color:#125d91!important;border-left:4px solid #2186bd!important}
+.gs-main{background:#fff!important;color:#172334!important}.gs-page-title{color:#172334!important;border-bottom:1px solid #e1e7ee!important}
+.gs-page-title small,.gs-footnote{color:#64748b!important}.gs-toolbar{background:#f5f7fa!important;border:1px solid #e0e6ed!important;color:#334155!important}
+.gs-toolbar button,.gs-toolbar select,.gs-toolbar input{background:#fff!important;color:#24364d!important;border:1px solid #cbd5e1!important}
+.gs-col-head{background:#edf2f7!important;color:#334155!important}.gs-sys-row,.gs-dtc-row,.gs-manual-row{background:#fff!important;color:#263548!important;border-color:#e0e6ed!important}
+.gs-status-ok{color:#14845e!important}.gs-status-fault{color:#c43d39!important}.gs-empty,.gs-detail{background:#f8fafc!important;color:#475569!important;border-color:#dce3eb!important}
+.gs-chart-row{background:#fff!important;border-color:#dce3eb!important;color:#25364a!important}.gs-chart-row canvas{background:#101d2b!important;border-radius:4px}
+.gs-obd-card{background:#fff!important;border-color:#dce3eb!important;color:#172334!important}.gs-obd-card small{color:#64748b!important}.gs-obd-card b{color:#172334!important}
+.gs-update-box,.gs-manual-layout article{background:#f8fafc!important;color:#24364d!important;border-color:#dce3eb!important}
+.gs-bottom{background:#182b49!important;color:#fff!important}.gs-home-grid button{background:#fff!important;color:#25364a!important;border-color:#dce3eb!important;box-shadow:0 2px 8px #1d2b3a0a}
+.gs-schematic svg{background:#fff!important}.gs-schematic svg rect{fill:#edf3f8!important;stroke:#8293a7!important}.gs-schematic svg text{fill:#26384d!important}
+.gs-side-foot{color:#8190a2!important}
+/* expanded simulator controls */
+.sim-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.sim-control{border:1px solid #dbe3ec;border-radius:9px;background:#fff;padding:10px}.sim-control label{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#526176;font-weight:650}.sim-control output{color:#176b9c;font-weight:800}.sim-control input{width:100%;accent-color:#1686b8;margin-top:10px}
+.sim-live-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.sim-live{border:1px solid #dce4ed;background:#fff;border-radius:8px;padding:10px}.sim-live small{display:block;color:#64748b;font-size:10px}.sim-live b{display:block;color:#172334;font-size:18px;margin-top:5px;font-variant-numeric:tabular-nums}.sim-live em{font-style:normal;font-size:10px;color:#16845e}
+.sim-actions{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.sim-actions button,.sim-btn{border:1px solid #cbd5e1;background:#fff;color:#25364a;border-radius:7px;padding:8px 11px;font-weight:650;cursor:pointer}.sim-actions button.primary,.sim-btn.primary{background:#1b6f9f;color:white;border-color:#1b6f9f}
+.sim-table{width:100%;border-collapse:collapse;font-size:12px}.sim-table th,.sim-table td{padding:9px;border-bottom:1px solid #e5eaf0;text-align:left}.sim-table th{background:#f1f5f9;color:#475569}.sim-status{padding:3px 7px;border-radius:20px;background:#e7f6ef;color:#11784f;font-size:10px}.sim-status.fault{background:#fff0ef;color:#bd3732}
+.sim-chart-wrap{border:1px solid #dce3eb;border-radius:9px;padding:9px;margin:8px 0;background:#fff}.sim-chart-wrap canvas{width:100%;height:100px;display:block}
+.sim-muted{color:#64748b;font-size:11px;line-height:1.5}.sim-report{white-space:pre-wrap;background:#f8fafc;border:1px solid #dce3eb;padding:12px;border-radius:8px;font-size:12px;line-height:1.6}
+@media(max-width:760px){main{padding:12px 9px 28px!important}.gs-body{display:block!important}.gs-sidebar{display:flex;overflow-x:auto;border-right:0!important;border-bottom:1px solid #dce3eb}.gs-nav{white-space:nowrap;min-width:max-content}.gs-side-foot{display:none}.sim-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-live-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gs-main{padding:12px!important}.gs-columns,.gs-manual-layout{grid-template-columns:1fr!important}}
+
+</style>
+
+<style>
+.gscan-device{margin:18px 0;border:1px solid #8d96a6;border-radius:7px;overflow:hidden;background:#e8eaf0;color:#202a3b;box-shadow:0 8px 28px #06182a35;font-family:Arial,"Noto Sans KR",sans-serif}.gs-status{display:none;height:25px;background:#15191f;color:#e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:10px;letter-spacing:.3px}.gs-header{display:none;height:58px;background:#26365f;color:white;display:flex;align-items:center;gap:13px;padding:0 12px}.gs-header b{font-size:19px;letter-spacing:.5px}.gs-header small{display:block;font-size:9px;color:#c4d0e8;margin-top:2px}.gs-home,.gs-back{border:0;background:transparent;color:#fff;font-size:25px;cursor:pointer}.gs-vehicle{margin-left:auto;text-align:right}.gs-body{display:grid;grid-template-columns:175px minmax(0,1fr);min-height:510px}.gs-sidebar{background:#d9dce5;border-right:1px solid #b8bfce;padding:8px 0;display:flex;flex-direction:column}.gs-nav{border:0;border-bottom:1px solid #c2c7d2;background:transparent;color:#26324d;text-align:left;padding:15px 13px;font-size:14px;font-weight:700;cursor:pointer;display:flex;gap:12px;align-items:center}.gs-nav span{font-size:22px;color:#52668f;width:24px;text-align:center}.gs-nav.active{background:#fff;color:#1777ad;border-left:4px solid #218fc5;padding-left:9px}.gs-side-foot{margin-top:auto;padding:14px 12px;color:#758098;font-size:9px;line-height:1.7}.gs-main{background:#fff;min-width:0;padding:17px}.gs-page{display:none}.gs-page.active{display:block}.gs-page-title{font-size:18px;font-weight:800;color:#26365f;border-bottom:2px solid #dce2eb;padding-bottom:12px;margin-bottom:14px}.gs-page-title small{display:block;font-size:11px;font-weight:400;color:#778197;margin-top:5px}.gs-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#f1f3f7;border:1px solid #d8dde7;padding:9px;margin-bottom:12px;font-size:11px;color:#647087}.gs-toolbar b{color:#27365c}.gs-toolbar button,.gs-update-box button{margin-left:auto;border:1px solid #287eae;background:#438fbd;color:white;border-radius:3px;padding:8px 14px;font-weight:700;cursor:pointer}.gs-toolbar select{padding:5px;border:1px solid #c4cad5;background:white}.gs-columns{display:grid;grid-template-columns:minmax(180px,.75fr) minmax(0,1.5fr);gap:10px}.gs-systems,.gs-results,.gs-manual-layout>div,.gs-manual-layout article{border:1px solid #d8dde6;min-width:0}.gs-col-head{background:#e9edf4;padding:10px 11px;font-size:12px;font-weight:800;color:#344567;display:flex;justify-content:space-between}.gs-sys-row,.gs-dtc-row,.gs-manual-row{width:100%;border:0;border-bottom:1px solid #e4e7ed;background:white;padding:11px;text-align:left;display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#26344f;cursor:pointer}.gs-sys-row:hover,.gs-dtc-row:hover,.gs-manual-row:hover{background:#f1f7fb}.gs-status-ok{color:#60a53e;font-weight:800}.gs-status-fault{color:#d94a45;font-weight:800}.gs-empty{padding:25px 12px;color:#7b8496;font-size:12px;text-align:center}.gs-dtc-row strong{display:block;color:#26365f}.gs-dtc-row small{display:block;color:#737e91;margin-top:4px}.gs-detail{margin:10px;padding:12px;background:#f6f7fa;border:1px solid #e0e4ec;min-height:65px;font-size:12px;line-height:1.7}.gs-footnote{font-size:10px;color:#7a8494;margin-top:12px;line-height:1.6}.gs-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.gs-home-grid button{min-height:105px;text-align:left;background:#f6f7fa;border:1px solid #d8deea;border-left:4px solid #6384b7;padding:14px;cursor:pointer;color:#26365f}.gs-home-grid button b{font-size:24px;display:block;color:#526a9b}.gs-home-grid button strong{display:block;font-size:14px;margin:7px 0}.gs-home-grid button small{color:#7c8597;font-size:10px}.gs-chart-list{display:grid;gap:7px}.gs-chart-row{display:grid;grid-template-columns:130px minmax(0,1fr) 82px;align-items:center;gap:8px;border:1px solid #e0e4eb;padding:7px;background:#fff}.gs-chart-label{font-size:11px;font-weight:700;color:#354666}.gs-chart-row canvas{width:100%;height:54px;background:#101d2b;display:block}.gs-chart-value{text-align:right;font-size:11px;font-weight:700;color:#3d8d70}.gs-obd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.gs-obd-card{border:1px solid #dce1e9;padding:12px;background:#fbfcfd}.gs-obd-card small{display:block;color:#788397;font-size:10px}.gs-obd-card b{display:block;color:#2d416c;font-size:18px;margin-top:7px}.gs-update-box{max-width:520px;margin:25px auto;text-align:center;border:1px solid #d9dfe9;padding:28px;background:#fafbfc}.gs-update-icon{font-size:40px;color:#6480b1}.gs-update-box h3{color:#293b63}.gs-update-box p{font-size:12px;color:#69758a}.gs-progress{height:9px;background:#e1e5ec;margin:20px 0;border-radius:8px;overflow:hidden}.gs-progress i{display:block;width:0;height:100%;background:#2993c5;transition:width .3s}.gs-manual-layout{display:grid;grid-template-columns:minmax(160px,.7fr) minmax(0,1.5fr);gap:10px}.gs-manual-layout article{padding:14px;font-size:12px;line-height:1.7}.gs-manual-layout article h3{color:#2c416c;margin:0 0 8px}.gs-schematic{margin-top:20px;background:#f6f8fb;border:1px solid #dfe4ed;padding:10px}.gs-schematic svg{width:100%;height:auto}.gs-schematic rect{fill:#e6edf7;stroke:#7185a8}.gs-schematic text{font-size:13px;fill:#314568}.gs-schematic small{color:#8892a3}.gs-bottom{display:none;height:32px;background:#14171d;color:#b8bdc8;display:flex;align-items:center;justify-content:space-around;font-size:17px}.gs-green{color:#5c9f48!important}
+@media(max-width:620px){.gs-body{grid-template-columns:118px minmax(0,1fr)}.gs-nav{font-size:11px;padding:13px 7px;gap:6px}.gs-nav span{width:20px;font-size:18px}.gs-main{padding:10px}.gs-columns,.gs-manual-layout{grid-template-columns:1fr}.gs-chart-row{grid-template-columns:88px minmax(0,1fr) 65px}.gs-vehicle{display:none}.gs-home-grid{grid-template-columns:1fr}.gs-toolbar{gap:7px}.gs-status{font-size:8px}}
 </style>
 </head>
 <body>
@@ -40,12 +108,34 @@ footer{text-align:center;color:#81909a;font-size:11px;padding:18px 4px}
   <div class="metric"><div class="label">완충까지 남은 시간</div><strong id="remaining">--:--</strong></div>
  </div>
 </section>
-<section class="panel">
- <div class="section-title">차량 진단 정보</div>
- <div class="warning">테스트용 임의 고장 코드</div>
- <div class="code" id="dtc">----</div><div class="note" id="dtcText">실제 차량 ECU에서 읽은 정보가 아닙니다.</div>
-</section>
-<section class="panel row">
+<div hidden aria-hidden="true"><span id="dtc">----</span><span id="dtcText"></span></div>
+<section class="gscan-device" aria-label="G-SCAN 스타일 차량 진단기">
+<div class="gs-body"><aside class="gs-sidebar"><button class="gs-nav active" data-gs-page="diagnosis"><span>⌕</span>진단</button><button class="gs-nav" data-gs-page="data"><span>▤</span>저장데이터 분석</button><button class="gs-nav" data-gs-page="obd"><span>▣</span>OBD-II</button><button class="gs-nav" data-gs-page="update"><span>⇩</span>소프트웨어 업데이트</button><button class="gs-nav" data-gs-page="manual"><span>▤</span>정비매뉴얼</button><button class="gs-nav" data-gs-page="live"><span>▥</span>실시간 데이터</button><button class="gs-nav" data-gs-page="actuator"><span>◉</span>액추에이터 테스트</button><button class="gs-nav" data-gs-page="report"><span>▤</span>진단 보고서</button><div class="gs-side-foot">DEMO VERSION<br>G-SCAN STYLE UI</div></aside>
+ <main class="gs-main">
+  <section class="gs-page" id="gs-home"><div class="gs-page-title">차량 진단 시스템 <small>원하는 기능을 선택하세요</small></div><div class="gs-home-grid"><button data-gs-page="diagnosis"><b>⌕</b><strong>진단</strong><small>전체 시스템 고장코드 검색</small></button><button data-gs-page="data"><b>▤</b><strong>저장데이터 분석</strong><small>센서 데이터 그래프 및 재생</small></button><button data-gs-page="obd"><b>▣</b><strong>OBD-II</strong><small>표준 진단 정보</small></button><button data-gs-page="update"><b>⇩</b><strong>소프트웨어 업데이트</strong><small>업데이트 상태 확인</small></button><button data-gs-page="manual"><b>▤</b><strong>정비매뉴얼</strong><small>고장코드 가이드 및 회로 정보</small></button></div></section>
+  <section class="gs-page active" id="gs-diagnosis"><div class="gs-page-title">전체 DTC 검색 <small>차량 선택 / 시스템별 고장 코드 확인</small></div><div class="gs-toolbar"><span>제조사 <b>CYBERTRUCK</b></span><span>차량 <b>EV DEMO</b></span><span>진단 조건 <b>IG KEY ON</b></span><button id="gs-scan">전체 시스템 검색</button></div><div class="gs-columns"><div class="gs-systems"><div class="gs-col-head">제어 시스템 <span>상태</span></div><div id="gs-system-list"></div></div><div class="gs-results"><div class="gs-col-head">고장 코드 검색 결과 <span id="gs-dtc-count">검색 대기</span></div><div id="gs-dtc-results" class="gs-empty">전체 시스템 검색을 눌러 진단을 시작하세요.</div><div class="gs-detail" id="gs-dtc-detail">고장 코드를 선택하면 상세 정보가 표시됩니다.</div></div></div><div class="gs-footnote">※ 본 화면은 교육·시연용 시뮬레이션입니다. 실제 차량 ECU 통신이나 제조사 공식 고장코드 조회 기능은 아닙니다.</div></section>
+  <section class="gs-page" id="gs-data"><div class="gs-page-title">저장데이터 분석 <small>센서 데이터 다중 그래프 · 실시간 시뮬레이션</small></div><div class="gs-toolbar"><span>기록 파일 <b>KEY_ON_LIVE.DAT</b></span><span>표시 모드 <b>그래프</b></span><button id="gs-data-play">Ⅱ 일시정지</button><label>시간축 <select id="gs-timebase"><option value="1">5초</option><option value="2" selected>10초</option><option value="4">20초</option></select></label></div><div class="gs-chart-list" id="gs-chart-list"></div><div class="gs-footnote">페달·조향 입력이 없는 KEY ON 정차 조건을 기본으로 표시합니다. 각 그래프는 시뮬레이션 값입니다.</div></section>
+  <section class="gs-page" id="gs-obd"><div class="gs-page-title">OBD-II 진단 <small>표준 PID 데이터 예시 · KEY ON</small></div><div class="gs-toolbar"><span>통신 상태 <b class="gs-green">시뮬레이션 연결</b></span><button id="gs-obd-refresh">데이터 갱신</button></div><div class="gs-obd-grid" id="gs-obd-grid"></div><div class="gs-footnote">차량 READY 전에는 엔진 회전수 등 일부 항목이 0 또는 미지원일 수 있습니다. 아래 값은 실제 OBD 어댑터 측정값이 아닙니다.</div></section>
+  <section class="gs-page" id="gs-update"><div class="gs-page-title">소프트웨어 업데이트 <small>진단기 소프트웨어 관리</small></div><div class="gs-update-box"><div class="gs-update-icon">⇩</div><h3>진단기 소프트웨어</h3><p>현재 버전 <b>DEMO 1.0.0</b></p><p>서버 연결 <b>시뮬레이션 모드</b></p><div class="gs-progress"><i id="gs-progress"></i></div><p id="gs-update-state">업데이트 확인을 실행할 수 있습니다.</p><button id="gs-update-start">업데이트 확인</button></div></section>
+  <section class="gs-page" id="gs-manual"><div class="gs-page-title">정비매뉴얼 / 고장코드 가이드 <small>진단 정보 및 점검 절차</small></div><div class="gs-manual-layout"><div><div class="gs-col-head">고장코드 목록</div><div id="gs-manual-list"></div></div><article id="gs-manual-detail"><h3>고장코드를 선택하세요</h3><p>고장코드별 설명, 진단 조건 및 점검 항목을 확인할 수 있습니다.</p><div class="gs-schematic"><svg viewBox="0 0 520 170" role="img" aria-label="센서 회로 개념도"><rect x="15" y="42" width="110" height="70" rx="5"/><text x="70" y="82" text-anchor="middle">센서</text><path d="M125 77 H215 M215 77 V35 H315 M215 77 V125 H315" stroke="#d89a32" stroke-width="3" fill="none"/><rect x="315" y="12" width="175" height="45" rx="4"/><rect x="315" y="103" width="175" height="45" rx="4"/><text x="402" y="40" text-anchor="middle">ECU 입력 신호</text><text x="402" y="131" text-anchor="middle">접지 / 전원 회로</text></svg><small>개념 회로도 · 실제 차량 배선도 아님</small></div></article></div></section>
+
+  <section class="gs-page" id="gs-live"><div class="gs-page-title">실시간 데이터 <small>센서 입력을 조작하면 측정값과 그래프가 함께 변합니다 · 시뮬레이션</small></div>
+   <div class="gs-toolbar"><span>차량 상태 <b id="sim-key-state">IG KEY ON · 정차</b></span><span>전원 <b id="sim-voltage">12.4 V</b></span><button id="sim-reset" class="sim-btn">초기 상태</button></div>
+   <div class="sim-grid">
+    <div class="sim-control"><label>가속페달 입력 <output id="sim-app-out">0 %</output></label><input id="sim-app" type="range" min="0" max="100" value="0"></div>
+    <div class="sim-control"><label>브레이크 페달 입력 <output id="sim-brake-out">0 %</output></label><input id="sim-brake" type="range" min="0" max="100" value="0"></div>
+    <div class="sim-control"><label>조향각 입력 <output id="sim-steer-out">0 °</output></label><input id="sim-steer" type="range" min="-540" max="540" value="0"></div>
+    <div class="sim-control"><label>차량 속도 / 휠 속도 <output id="sim-speed-out">0 km/h</output></label><input id="sim-speed" type="range" min="0" max="180" value="0"></div>
+    <div class="sim-control"><label>냉각수 온도 <output id="sim-temp-out">32 °C</output></label><input id="sim-temp" type="range" min="-20" max="120" value="32"></div>
+    <div class="sim-control"><label>구동 모터 회전수 <output id="sim-rpm-out">0 rpm</output></label><input id="sim-rpm" type="range" min="0" max="16000" value="0"></div>
+   </div>
+   <div class="sim-live-grid" id="sim-live-values"></div><div id="sim-live-charts"></div>
+   <div class="sim-actions"><button id="sim-record" class="primary">● 데이터 기록 시작</button><button id="sim-download">CSV 저장</button><button id="sim-clear-record">기록 초기화</button></div><p class="sim-muted">페달·조향 입력을 0으로 두면 해당 신호는 일정한 정상 기준값으로 유지됩니다. ABS 휠 속도는 정차 시 0입니다. 표시값은 차량 특성에 맞춘 교육용 시뮬레이션이며 실차 측정값이 아닙니다.</p>
+  </section>
+  <section class="gs-page" id="gs-actuator"><div class="gs-page-title">액추에이터 테스트 <small>가상 부품 작동 명령 및 상태 확인</small></div><div class="gs-toolbar"><span>작동 조건 <b>IG KEY ON · 시뮬레이션</b></span><button id="sim-actuator-stop">전체 정지</button></div><div class="gs-home-grid" id="sim-actuator-list"></div><p class="sim-muted">이 화면은 ECU에 실제 작동 명령을 보내지 않습니다. 선택한 부품의 가상 작동 상태와 센서 반응을 시뮬레이션합니다.</p></section>
+  <section class="gs-page" id="gs-report"><div class="gs-page-title">진단 보고서 <small>현재 시뮬레이션 차량 상태와 저장한 데이터 요약</small></div><div class="sim-actions"><button id="sim-report-refresh" class="primary">보고서 생성</button><button id="sim-report-download">보고서 TXT 저장</button></div><div class="sim-report" id="sim-report-body">보고서 생성을 누르면 현재 차량 정보와 센서 상태가 표시됩니다.</div></section>
+ </main></div>
+</section><section class="panel row">
  <div><div class="section-title" style="margin:0 0 5px">ESP32 연결 상태</div><div class="note" style="margin:0" id="lastUpdate">ESP32 데이터 수신 대기 중</div></div>
  <div class="connection"><span class="dot" id="dot"></span><strong id="connection">충전 대기 중</strong></div>
 </section>
@@ -107,6 +197,94 @@ function updateElapsed(){
 waiting();refresh();
 setInterval(refresh,500);
 setInterval(updateElapsed,1000);
+
+
+// G-SCAN style multi-screen diagnostic UI. All readings remain demo simulations.
+const GS_DTC_LIST=[
+{code:'CT-ABS-001',desc:'ABS 휠 속도 센서 신호 이상',system:'ABS / 제동 제어',cause:'휠 속도 신호 단선·간헐 접촉 또는 비정상 펄스',check:'휠 속도 센서 커넥터 → 배선 및 센서 간극 → 신호 파형 → 허브 톤링 순서로 확인'},
+{code:'CT-MOT-001',desc:'구동 모터 위치·회전 신호 이상',system:'구동 모터 제어',cause:'모터 위치 센서 또는 회전 신호의 불연속',check:'모터 위치 데이터 → 커넥터 체결 → 차폐·전원·신호 회로 순서로 확인'},
+{code:'CT-INV-001',desc:'구동 인버터 온도 이상',system:'인버터 제어',cause:'인버터 온도 입력 또는 냉각 성능 이상',check:'인버터 온도 데이터 → 냉각수 순환 → 펌프·팬 작동 → 센서 배선 순서로 확인'},
+{code:'CT-COOL-001',desc:'냉각수 온도 센서 신호 이상',system:'열관리 제어',cause:'온도 센서 신호 단선·단락 또는 비정상 범위',check:'냉각수 온도값 → 센서 커넥터 → 배선 연속성 → 센서 특성 순서로 확인'},
+{code:'CT-STR-001',desc:'조향각 센서 신호 이상',system:'조향 제어',cause:'조향각 영점 편차 또는 신호 불연속',check:'조향각 영점 → 센서 커넥터 → 좌·우 조향 시 신호 연속성 순서로 확인'}
+];
+const GS_SYSTEMS=['ABS / 제동 제어','구동 모터 제어','인버터 제어','열관리 제어','조향 제어'];
+let gsActiveCode='',gsChartsRunning=true,gsPhase=0,gsUpdateTimer=null;
+const gsFaultMap=code=>{if(!code||code==='----')return '';if(code.includes('ABS'))return 'abs';if(code.includes('COOL'))return 'coolant';if(code.includes('STR'))return 'steer';return '';};
+function gsPage(name){document.querySelectorAll('.gs-page').forEach(p=>p.classList.toggle('active',p.id==='gs-'+name));document.querySelectorAll('.gs-nav').forEach(b=>b.classList.toggle('active',b.dataset.gsPage===name));}
+function gsCurrentCode(){return (document.getElementById('dtc')?.textContent||'').trim();}
+function gsRenderSystems(){const code=gsCurrentCode(),active=GS_DTC_LIST.find(x=>x.code===code),list=document.getElementById('gs-system-list');if(!list)return;list.innerHTML=GS_SYSTEMS.map((name)=>{const faulty=!!active&&active.system===name;return `<button class=\"gs-sys-row\" data-gs-sys=\"${name}\"><span>${name}</span><b class=\"${faulty?'gs-status-fault':'gs-status-ok'}\">${faulty?'고장 1':'정상 0'}</b></button>`}).join('');}
+function gsRenderDtc(){const code=gsCurrentCode(),results=document.getElementById('gs-dtc-results'),count=document.getElementById('gs-dtc-count');if(!results)return;const active=GS_DTC_LIST.find(x=>x.code===code);count.textContent=active?'고장 코드 1건':'고장 코드 0건';results.innerHTML=active?`<button class=\"gs-dtc-row\" data-gs-code=\"${active.code}\"><span><strong>${active.code}</strong><small>${active.system} · ${active.desc}</small></span><b class=\"gs-status-fault\">고장</b></button>`:'<div class=\"gs-empty\">전체 시스템 검사 완료 · 검출된 고장 코드가 없습니다.</div>';gsRenderSystems();}
+function gsDetail(code){const item=GS_DTC_LIST.find(x=>x.code===code);if(!item)return;gsActiveCode=code;document.getElementById('gs-dtc-detail').innerHTML=`<b>${item.code} · ${item.desc}</b><br>제어 시스템: ${item.system}<br>고장 발생 조건: IG KEY ON / 시뮬레이션 진단 조건<br>예상 원인: ${item.cause}<br>점검 순서: ${item.check}<br><span class=\"gs-status-fault\">교육용 시뮬레이션 고장 정보 · 실제 ECU 판독값 아님</span>`;document.getElementById('gs-manual-detail').innerHTML=`<h3>${item.code} · ${item.desc}</h3><p><b>대상 시스템</b>: ${item.system}</p><p><b>예상 원인</b>: ${item.cause}</p><p><b>진단 조건</b>: IG KEY ON (시뮬레이션)</p><p><b>점검 순서</b><br>${item.check}</p><p><b>수리 후 확인</b><br>동일 조건으로 재검사하고 관련 실시간 데이터 및 파형이 정상 범위로 복귀했는지 확인합니다.</p><div class=\"gs-schematic\"><svg viewBox=\"0 0 520 170\"><rect x=\"15\" y=\"42\" width=\"110\" height=\"70\" rx=\"5\"/><text x=\"70\" y=\"82\" text-anchor=\"middle\">센서 / 부품</text><path d=\"M125 77 H215 M215 77 V35 H315 M215 77 V125 H315\" stroke=\"#d89a32\" stroke-width=\"3\" fill=\"none\"/><rect x=\"315\" y=\"12\" width=\"175\" height=\"45\" rx=\"4\"/><rect x=\"315\" y=\"103\" width=\"175\" height=\"45\" rx=\"4\"/><text x=\"402\" y=\"40\" text-anchor=\"middle\">제어기 신호</text><text x=\"402\" y=\"131\" text-anchor=\"middle\">전원 / 접지</text></svg><small>개념 회로도 · 실제 차량 배선도 아님</small></div>`;}
+function gsDrawMini(canvas,kind,t){const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2),w=Math.max(120,Math.floor(r.width*dpr)),h=Math.max(45,Math.floor(r.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const c=canvas.getContext('2d');c.fillStyle='#101d2b';c.fillRect(0,0,w,h);c.strokeStyle='#314256';c.lineWidth=1;for(let x=0;x<w;x+=w/10){c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke();}for(let y=0;y<h;y+=h/4){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();}const fault=gsFaultMap(gsCurrentCode())===kind;c.strokeStyle=fault?'#ed655d':'#55d6a2';c.lineWidth=2*dpr;c.beginPath();for(let x=0;x<w;x++){let y=h*.52;if(kind==='pedal'||kind==='brake')y=h*.52;else if(kind==='steer')y=h*.52;else if(kind==='abs')y=h*.52;else if(kind==='coolant')y=h*.42;if(fault){if(kind==='abs')y=h*(.5+((Math.floor(x/8)%2)?-.3:.28));else if(kind==='steer')y+=Math.sin(x*.09+t*2)*h*.2;else if(kind==='coolant')y+=Math.sin(x*.05+t)*h*.16;}if(x===0)c.moveTo(x,y);else c.lineTo(x,y);}c.stroke();}
+const gsChannels=[['ABS 휠 속도','abs','0 km/h'],['가속페달 위치','pedal','0.0 %'],['조향각 센서','steer','0.0 °'],['브레이크 페달','brake','OFF / 0 %'],['냉각수 온도','coolant','32.0 °C']];
+function gsBuildCharts(){const host=document.getElementById('gs-chart-list');if(!host)return;host.innerHTML=gsChannels.map(([name,id,val])=>`<div class="gs-chart-row"><span class="gs-chart-label">${name}</span><canvas data-gs-chart="${id}"></canvas><b class="gs-chart-value" id="gs-val-${id}">${val}</b></div>`).join('');}
+function gsTick(){gsPhase+=.035*Number(document.getElementById('gs-timebase')?.value||2);document.querySelectorAll('[data-gs-chart]').forEach(cv=>{const k=cv.dataset.gsChart;gsDrawMini(cv,k,gsPhase);const f=gsFaultMap(gsCurrentCode())===k;const vals={abs:f?'불규칙 펄스':'0 km/h',pedal:'0.0 %',steer:f?'신호 변동':'0.0 °',brake:'OFF / 0 %',coolant:f?'온도 신호 이상':'32.0 °C'};const el=document.getElementById('gs-val-'+k);if(el)el.textContent=vals[k];});}
+function gsBuildObd(){const data=[['제어 모듈 전압','12.4 V'],['엔진 회전수','0 rpm'],['차량 속도','0 km/h'],['가속페달 위치','0.0 %'],['스로틀 위치','0.0 %'],['냉각수 온도','32 °C'],['브레이크 스위치','OFF'],['통신 상태','시뮬레이션']];document.getElementById('gs-obd-grid').innerHTML=data.map(([a,b])=>`<div class="gs-obd-card"><small>${a}</small><b>${b}</b></div>`).join('');}
+function gsBuildManual(){const el=document.getElementById('gs-manual-list');el.innerHTML=GS_DTC_LIST.map(x=>`<button class="gs-manual-row" data-gs-manual="${x.code}">${x.code}</button>`).join('');}
+function gsUpdate(){const state=document.getElementById('gs-update-state'),bar=document.getElementById('gs-progress'),btn=document.getElementById('gs-update-start');if(gsUpdateTimer)clearInterval(gsUpdateTimer);let n=0;btn.disabled=true;state.textContent='업데이트 서버 확인 중…';gsUpdateTimer=setInterval(()=>{n+=10;bar.style.width=n+'%';state.textContent=n<100?`업데이트 확인 중… ${n}%`:'최신 데모 버전입니다. 업데이트가 필요하지 않습니다.';if(n>=100){clearInterval(gsUpdateTimer);btn.disabled=false;}},180);}
+function initGscan(){document.querySelectorAll('[data-gs-page]').forEach(b=>b.addEventListener('click',()=>gsPage(b.dataset.gsPage)));document.getElementById('gs-back')?.addEventListener('click',()=>gsPage('home'));document.getElementById('gs-scan').addEventListener('click',gsRenderDtc);document.getElementById('gs-dtc-results').addEventListener('click',e=>{const b=e.target.closest('[data-gs-code]');if(b)gsDetail(b.dataset.gsCode)});document.getElementById('gs-manual-list').addEventListener('click',e=>{const b=e.target.closest('[data-gs-manual]');if(b)gsDetail(b.dataset.gsManual)});document.getElementById('gs-data-play').addEventListener('click',e=>{gsChartsRunning=!gsChartsRunning;e.currentTarget.textContent=gsChartsRunning?'Ⅱ 일시정지':'▶ 재생'});document.getElementById('gs-update-start').addEventListener('click',gsUpdate);document.getElementById('gs-obd-refresh').addEventListener('click',gsBuildObd);document.querySelectorAll('.gs-systems').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-gs-sys]'))gsRenderDtc()}));gsBuildCharts();gsBuildObd();gsBuildManual();gsRenderDtc();setInterval(()=>{const clock=document.getElementById('gs-clock');if(clock)clock.textContent=new Date().toLocaleTimeString('ko-KR');if(gsChartsRunning)gsTick();},100);}
+window.addEventListener('load',initGscan);
+
 </script>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);const root=document.querySelector('.gscan-device');if(!root)return;
+const vehicle= root.querySelector('.gs-vehicle strong')?.textContent||'EV DEMO';
+const state={app:0,brake:0,steer:0,speed:0,temp:32,rpm:0,recording:false,records:[],act:{'냉각팬':false,'워터펌프':false,'브레이크 경고등':false,'충전 릴레이':false},faultCleared:false};
+const prefix=vehicle.includes('CYBER')?'CT':'EV';
+const DTC=[
+ {code:prefix+'-ABS-001',desc:'ABS 휠 속도 센서 신호 이상',sys:'ABS / 제동 제어',sensor:'abs',cause:'휠 속도 신호의 단선·간헐 접촉 또는 비정상 펄스',check:'센서 커넥터 → 배선 및 간극 → 센서 신호 파형 → 허브 톤링 순서로 확인'},
+ {code:prefix+'-MOT-001',desc:'구동 모터 위치/회전 신호 이상',sys:'구동 모터 제어',sensor:'motor',cause:'위치 센서 신호 또는 모터 제어 신호 이상',check:'모터 위치 신호, 커넥터, 차폐 및 전원 회로 확인'},
+ {code:prefix+'-INV-001',desc:'구동 인버터 온도 이상',sys:'인버터 제어',sensor:'inverter',cause:'온도 센서 입력 또는 냉각 성능 이상',check:'인버터 온도 데이터, 냉각 회로 및 커넥터 확인'},
+ {code:prefix+'-COOL-001',desc:'냉각수 온도 센서 신호 이상',sys:'열관리 제어',sensor:'coolant',cause:'온도 센서 신호 단선·단락 또는 비정상 범위',check:'냉각수 온도값, 센서 저항 특성, 배선 및 커넥터 확인'},
+ {code:prefix+'-STR-001',desc:'조향각 센서 신호 이상',sys:'조향 제어',sensor:'steer',cause:'조향각 영점 편차 또는 신호 불연속',check:'조향각 영점, 센서 커넥터, 신호 변화의 연속성 확인'}
+];
+const getDtc=()=>{let code=($('dtc')?.textContent||'').trim();return DTC.find(x=>x.code===code)||null};
+const faultSensor=()=>{const d=state.faultCleared?null:getDtc();return d?.sensor||null};
+const val=()=>{const f=faultSensor();return {app1:0.8+state.app*.038,app2:0.4+state.app*.019,brake:state.brake>2?1:0,steer:state.steer,speed:state.speed,rpm:state.rpm,temp:state.temp,motorCurrent:state.rpm*.0018,invTemp:Math.min(95,34+state.rpm*.002),absPulse:state.speed===0?0:state.speed*2.4,absFault:f==='abs',steerFault:f==='steer',coolFault:f==='coolant',motorFault:f==='motor',invFault:f==='inverter'};};
+const fmt=(n,d=1)=>Number(n).toFixed(d);
+function card(name,value,unit,status='정상'){return `<div class="sim-live"><small>${name}</small><b>${value} <span style="font-size:11px;font-weight:500">${unit}</span></b><em>${status}</em></div>`}
+function readings(){const v=val();$('sim-live-values').innerHTML=[card('가속페달 센서 1',fmt(v.app1,2),'V'),card('가속페달 센서 2',fmt(v.app2,2),'V'),card('브레이크 스위치',v.brake?'ON':'OFF',''),card('조향각',fmt(v.steer,0),'°',v.steerFault?'신호 이상':'정상'),card('FL 휠 속도',fmt(v.speed,0),'km/h',v.absFault?'신호 이상':'정상'),card('FR 휠 속도',fmt(v.speed,0),'km/h'),card('냉각수 온도',fmt(v.temp,1),'°C',v.coolFault?'신호 이상':'정상'),card('모터 회전수',fmt(v.rpm,0),'rpm'),card('인버터 온도',fmt(v.invTemp,1),'°C',v.invFault?'신호 이상':'정상'),card('모터 전류',fmt(v.motorCurrent,2),'A'),card('제어기 전압','12.4','V'),card('차량 속도',fmt(v.speed,0),'km/h')].join('');
+ for(const [id,x,unit] of [['app',state.app,'%'],['brake',state.brake,'%'],['steer',state.steer,'°'],['speed',state.speed,'km/h'],['temp',state.temp,'°C'],['rpm',state.rpm,'rpm']])$( `sim-${id}-out`).textContent=`${x}${unit==='°'?' °': ' '+unit}`;
+ $('sim-key-state').textContent=state.speed?'IG KEY ON · 주행 시뮬레이션':'IG KEY ON · 정차';$('sim-voltage').textContent='12.4 V';
+}
+const channels=[['가속페달 센서 1','app1','V'],['가속페달 센서 2','app2','V'],['브레이크 스위치','brake','ON/OFF'],['조향각 센서','steer','°'],['ABS 휠 속도','speed','km/h'],['냉각수 온도','temp','°C']];
+const history=Object.fromEntries(channels.map(c=>[c[1],[]]));let tick=0;
+function draw(canvas,key){if(!canvas)return;const w=Math.max(240,canvas.clientWidth||500),h=100,dpr=Math.min(devicePixelRatio||1,2);canvas.width=w*dpr;canvas.height=h*dpr;const c=canvas.getContext('2d');c.scale(dpr,dpr);c.fillStyle='#fbfdff';c.fillRect(0,0,w,h);c.strokeStyle='#e6ebf1';c.lineWidth=1;for(let i=0;i<=10;i++){c.beginPath();c.moveTo(i*w/10,0);c.lineTo(i*w/10,h);c.stroke()}for(let i=0;i<=4;i++){c.beginPath();c.moveTo(0,i*h/4);c.lineTo(w,i*h/4);c.stroke()}
+ const arr=history[key],v=val(),fault=faultSensor();let current=key==='app1'?v.app1:key==='app2'?v.app2:key==='brake'?v.brake:key==='steer'?v.steer:key==='speed'?v.speed:v.temp;
+ let norm=(x)=>{if(key==='app1')return (x-.5)/4.5;if(key==='app2')return (x-.2)/2.3;if(key==='brake')return x*.8+.1;if(key==='steer')return .5+x/1200;if(key==='speed')return x/180;if(key==='temp')return (x+20)/140;return .5};
+ c.strokeStyle=fault===key?'#d94841':'#169b75';c.lineWidth=2;c.beginPath();arr.forEach((x,i)=>{let y=h-8-Math.max(0,Math.min(1,norm(x)))*(h-16);if(fault===key){y+=Math.sin(i*.8+tick)*9;if(i%31===0)y=8;}if(i===0)c.moveTo(i*(w/Math.max(1,arr.length-1)),y);else c.lineTo(i*(w/Math.max(1,arr.length-1)),y)});c.stroke();
+}
+function buildCharts(){const host=$('sim-live-charts');host.innerHTML=channels.map(([label,key,unit])=>`<div class="sim-chart-wrap"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:5px"><span>${label}</span><span id="sim-chart-v-${key}">-- ${unit}</span></div><canvas id="sim-cv-${key}"></canvas></div>`).join('');}
+function updateCharts(){const v=val();const values={app1:v.app1,app2:v.app2,brake:v.brake,steer:v.steer,speed:v.speed,temp:v.temp};for(const [key,x] of Object.entries(values)){let y=x;if(faultSensor()===key){if(key==='app1'||key==='app2')y+=Math.sin(tick*.9)*.35;if(key==='brake')y=tick%10<4?0:1;if(key==='steer')y+=Math.sin(tick*.4)*35;if(key==='speed')y=tick%14<5?0:Math.max(0,state.speed+Math.sin(tick)*8);if(key==='temp')y+=Math.sin(tick*.3)*18;}history[key].push(y);if(history[key].length>100)history[key].shift();const cv=$(`sim-cv-${key}`);draw(cv,key);const el=$(`sim-chart-v-${key}`);if(el)el.textContent=`${fmt(y, key==='steer'||key==='speed'?0:2)} ${channels.find(x=>x[1]===key)[2]}`;}}
+function syncInputs(){for(const k of ['app','brake','steer','speed','temp','rpm']){$(`sim-${k}`).value=state[k];$(`sim-${k}`).addEventListener('input',e=>{state[k]=Number(e.target.value);readings();});}}
+function actBuild(){const names=Object.keys(state.act);$('sim-actuator-list').innerHTML=names.map((n,i)=>`<button class="sim-control" data-act="${n}" style="text-align:left;min-height:90px"><b>${n}</b><div style="margin-top:12px"><span class="sim-status" id="act-${i}">${state.act[n]?'작동 중':'정지'}</span></div><small style="display:block;color:#64748b;margin-top:8px">눌러서 작동 상태 전환</small></button>`).join('');$('sim-actuator-list').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const n=b.dataset.act;state.act[n]=!state.act[n];actBuild();});}
+function renderReport(){const d=state.faultCleared?null:getDtc(),v=val();$('sim-report-body').textContent=`차량: ${vehicle}\n진단기: G-SCAN 스타일 교육용 시뮬레이터\n진단 조건: IG KEY ON / ${state.speed?'주행 시뮬레이션':'정차'}\n고장 코드: ${d?d.code+' - '+d.desc:'현재 표시된 고장 코드 없음'}\n\n센서 데이터\n가속페달: ${fmt(state.app)} % (센서1 ${fmt(v.app1,2)} V / 센서2 ${fmt(v.app2,2)} V)\n브레이크: ${fmt(state.brake)} % (${v.brake?'ON':'OFF'})\n조향각: ${fmt(state.steer,0)} °\n휠 속도: ${fmt(state.speed,0)} km/h\n냉각수 온도: ${fmt(state.temp)} °C\n모터 회전수: ${fmt(state.rpm,0)} rpm\n인버터 온도: ${fmt(v.invTemp)} °C\n기록 샘플: ${state.records.length}개\n\n주의: 모든 값은 교육용 시뮬레이션이며 실제 차량 ECU에서 취득한 값이 아닙니다.`;}
+function download(name,text,type='text/plain'){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function sample(){const v=val();const row={time:new Date().toISOString(),app:state.app,app1:v.app1,app2:v.app2,brake:state.brake,steer:state.steer,speed:state.speed,temp:state.temp,rpm:state.rpm,invTemp:v.invTemp};if(state.recording)state.records.push(row);}
+function updateDtcPanels(){const d=state.faultCleared?null:getDtc();const list=$('gs-dtc-results');if(list){list.innerHTML=d?`<button class=\"gs-dtc-row\" data-gs-code=\"${d.code}\"><span><strong>${d.code}</strong><small>${d.sys} · ${d.desc}</small></span><b class=\"gs-status-fault\">현재 검출</b></button>`:'<div class=\"gs-empty\">전체 시스템 검사 완료 · 검출된 고장 코드가 없습니다.</div>';}const count=$('gs-dtc-count');if(count)count.textContent=d?'고장 코드 1건':'고장 코드 0건';const systems=$('gs-system-list');if(systems){const names=['ABS / 제동 제어','구동 모터 제어','인버터 제어','열관리 제어','조향 제어'];systems.innerHTML=names.map(n=>{const fault=!!d&&d.sys===n;return `<div class=\"gs-sys-row\"><span>${n}</span><b class=\"${fault?'gs-status-fault':'gs-status-ok'}\">${fault?'고장 1':'정상 0'}</b></div>`}).join('');}}
+// Rewire original page navigation to support the added diagnostic pages.
+root.querySelectorAll('[data-gs-page]').forEach(b=>b.addEventListener('click',()=>{root.querySelectorAll('.gs-page').forEach(p=>p.classList.toggle('active',p.id==='gs-'+b.dataset.gsPage));root.querySelectorAll('.gs-nav').forEach(n=>n.classList.toggle('active',n.dataset.gsPage===b.dataset.gsPage));}));
+$('sim-reset').addEventListener('click',()=>{Object.assign(state,{app:0,brake:0,steer:0,speed:0,temp:32,rpm:0});syncInputs();readings();});
+$('sim-record').addEventListener('click',e=>{state.recording=!state.recording;e.currentTarget.textContent=state.recording?'■ 기록 중지':'● 데이터 기록 시작';e.currentTarget.classList.toggle('primary',!state.recording);});
+$('sim-download').addEventListener('click',()=>{const rows=state.records;if(!rows.length){alert('저장된 데이터가 없습니다. 먼저 데이터 기록을 시작하세요.');return;}const keys=Object.keys(rows[0]);download('diagnostic-live-data.csv',[keys.join(','),...rows.map(r=>keys.map(k=>r[k]).join(','))].join('\n'),'text/csv');});
+$('sim-clear-record').addEventListener('click',()=>{state.records=[];});$('sim-actuator-stop').addEventListener('click',()=>{Object.keys(state.act).forEach(k=>state.act[k]=false);actBuild();});
+$('sim-report-refresh').addEventListener('click',renderReport);$('sim-report-download').addEventListener('click',()=>{renderReport();download('diagnostic-report.txt',$('sim-report-body').textContent);});
+$('gs-scan')?.addEventListener('click',()=>{state.faultCleared=false;updateDtcPanels();});
+// Replace existing diagnostic details with model-specific simulated guidance.
+const oldDetail=$('gs-dtc-detail');if(oldDetail){const d=getDtc();if(d)oldDetail.innerHTML=`<b>${d.code}</b><br>${d.desc}<br>고장 원인: ${d.cause}<br>점검 순서: ${d.check}<br><span class="gs-status-fault">교육용 시뮬레이션 고장 정보</span>`;}
+$('gs-dtc-detail')?.insertAdjacentHTML('beforeend','<div class="sim-actions"><button id="sim-clear-dtc">가상 고장코드 삭제</button><button id="sim-recheck-dtc">재진단</button></div>');
+$('sim-clear-dtc')?.addEventListener('click',()=>{state.faultCleared=true;updateDtcPanels();readings();$('gs-dtc-detail').innerHTML='가상 고장코드가 삭제되었습니다. 재진단을 누르면 시뮬레이션 상태를 다시 확인합니다.';alert('시뮬레이션 고장코드를 삭제했습니다. 실제 ECU 코드는 삭제되지 않았습니다.');});$('sim-recheck-dtc')?.addEventListener('click',()=>{state.faultCleared=false;updateDtcPanels();readings();const d=getDtc();if(d)$('gs-dtc-detail').innerHTML='<b>'+d.code+' · '+d.desc+'</b><br>제어 시스템: '+d.sys+'<br>고장 원인: '+d.cause+'<br>점검 순서: '+d.check;});
+// Extend manual list with the five known simulation DTCs.
+const ml=$('gs-manual-list');if(ml){ml.innerHTML=DTC.map(d=>`<button class="gs-manual-row" data-sim-manual="${d.code}">${d.code} · ${d.desc}</button>`).join('');ml.addEventListener('click',e=>{const b=e.target.closest('[data-sim-manual]');if(!b)return;const d=DTC.find(x=>x.code===b.dataset.simManual);$('gs-manual-detail').innerHTML=`<h3>${d.code} · ${d.desc}</h3><p><b>고장 원인</b><br>${d.cause}</p><p><b>진단 조건</b>: IG KEY ON (시뮬레이션)</p><p><b>점검 순서</b><br>${d.check}</p><p class="sim-muted">이 고장코드 설명은 교육용으로 구성한 내용이며 제조사 공식 정비자료가 아닙니다.</p>`;});}
+// OBD screen becomes live and refreshable.
+const obd=$('gs-obd-grid');if(obd){const renderObd=()=>{const v=val();const rows=[['제어 모듈 전압','12.4 V'],['차량 속도',fmt(state.speed,0)+' km/h'],['모터 회전수',fmt(state.rpm,0)+' rpm'],['가속페달 위치',fmt(state.app,1)+' %'],['브레이크 스위치',v.brake?'ON':'OFF'],['조향각',fmt(state.steer,0)+' °'],['냉각수 온도',fmt(state.temp,1)+' °C'],['인버터 온도',fmt(v.invTemp,1)+' °C']];obd.innerHTML=rows.map(([a,b])=>`<div class="gs-obd-card"><small>${a}</small><b>${b}</b></div>`).join('');};$('gs-obd-refresh')?.addEventListener('click',renderObd);}
+// Initialize
+syncInputs();buildCharts();actBuild();readings();updateDtcPanels();
+setInterval(()=>{tick++;sample();readings();updateCharts();},250);
+})();
+</script>
+
 </body>
 </html>
